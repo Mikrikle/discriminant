@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descriminant</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+    <div class="content">
+        <span>Нажмите на (+) для смены знака. Оставьте пустое значение для 1 или 0</span>
+        <div class="equation-block">
+            <div class="row">
+                <div class="checkbox-block">
+                    <input type="checkbox" class="custom-checkbox" id="iskeyboard" name="iskeyboard" value="no"
+                        onclick="onoffkv(this)">
+                    <label for="iskeyboard">Включить клавиатуру?</label>
+                </div>
+            </div>
+            <div class="row">
+                <div id="equation">
+                    <input class='number' id="a" autocomplete="off">
+                    <span class="findix_sign_and_xpan">x²</span>
+                    <button class="minplus" id="b-sign">+</button>
+                    <input class='number' id="b" autocomplete="off">
+                    <span class="findix_sign_and_xpan">x</span>
+                    <button class="minplus" id="c-sign">+</button>
+                    <input class='number' id="c" autocomplete="off">
+                </div>
+            </div>
+        </div>
+        <div class="decision-block">
+            <div class="row">
+                <button id="ok-button" class="ok">Решить</button>
+            </div>
+
+            <div class="error-row">
+                <h5 id="error-field"></h5>
+            </div>
+
+            <div class="row">
+                <h5 id="decision-logo">РЕШЕНИЕ</h5>
+            </div>
+
+            <div class="row" id='decision'>
+                <table>
+                    <tr>
+                        <td colspan="6"><span class="info">Исходное выражение</span></td>
+                    </tr>
+                    <tr>
+                        <td id='begin' colspan="6"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="6">
+                            <hr>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="6"><span class="info">Дескриминант</span></td>
+                    </tr>
+                    <tr>
+                        <td id='descriminant' colspan="6"></td>
+                    </tr>
+                    <tr>
+                        <td id="root-descriminant" colspan="6"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="6">
+                            <hr>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="6"><span class="info">Ответ</span></td>
+                    </tr>
+                    <tr>
+                        <td>x1 = </td>
+                        <td id='findx1'></td>
+                        <td class="findx">=</td>
+                        <td id="count-findx1"></td>
+
+                        <td id="count-findx11">=</td>
+                        <td id="count-findx12"></td>
+
+
+                    </tr>
+                    <tr>
+                        <td>x2 = </td>
+                        <td id='findx2'></td>
+                        <td class="findx">=</td>
+                        <td id="count-findx2"></td>
+
+                        <td id="count-findx21">=</td>
+                        <td id="count-findx22"></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="row" id="result-table">
+                <table>
+                    <tr>
+                        <td>x1 = </td>
+                        <td id="result1">0</td>
+                    </tr>
+                    <tr>
+                        <td>x2 = </td>
+                        <td id="result2">0</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="keyboard" class="keyboard">
+        <div class="row">
+            <div class="key">7</div>
+            <div class="key">8</div>
+            <div class="key">9</div>
+        </div>
+
+        <div class="row">
+            <div class="key">4</div>
+            <div class="key">5</div>
+            <div class="key">6</div>
+        </div>
+
+        <div class="row">
+            <div class="key">1</div>
+            <div class="key">2</div>
+            <div class="key">3</div>
+        </div>
+
+        <div class="row">
+            <div class="key clear-button">&#215;</div>
+            <div class="key">0</div>
+            <div class="key backspace">&lArr;</div>
+        </div>
+        <div class="key key-ok-button ok">Решить</div>
+    </div>
+
+
+
+
+
+    <script>
+        "use strict";
+        Main_getData();
+
+        document.addEventListener("click", function (e) {
+
+            if (e.target.className == "minplus") {
+                if (e.target.innerHTML == '+') {
+                    e.target.innerHTML = '&#8722;';
+                    e.target.style = 'border-color:#6B4F5C;';
+                } else {
+                    e.target.innerHTML = '+';
+                    e.target.style = 'border-color:black;';
+                }
+            } else if (e.target.className.split(' ')[e.target.className.split(' ').length - 1] == "ok") {
+                Main_getData();
+            }
+        });
+
+
+        function Main_getData() {
+            let a = document.getElementById('a').value;
+            if (!a) { a = 1 };
+            if (a == 0) { a = 1 };
+
+            let b = document.getElementById('b').value;
+            if (!b) { b = 1 };
+            if (document.getElementById('b-sign').innerText == '−') { b = -b };
+            if (b == 0) { b = 1 };
+
+            let c = document.getElementById('c').value;
+            if (document.getElementById('c-sign').innerText == '−') { c = -c };
+
+            for (let i of [a, b, c]) {
+                if (Number.MAX_SAFE_INTEGER <= i || i >= Number.MAX_SAFE_INTEGER) {
+                    document.getElementById('error-field').innerHTML = 'введено слишком большое число';
+                    document.getElementById('error-field').style.display = 'block';
+                    return (0);
+                }
+            }
+
+            if (isNaN(a) == false && isNaN(b) == false && isNaN(c) == false) {
+                count(+a, +b, +c);
+            } else {
+                document.getElementById('error-field').innerHTML = 'введены неверные значения';
+                document.getElementById('error-field').style.display = 'block';
+            };
+        }
+
+
+        function count(a, b, c) {
+            display_result();
+
+            function ifMinus(n) {
+                if (n > 0) {
+                    return (n);
+                } else {
+                    return (`(${n})`);
+                }
+            }
+
+            function make_an_equation(a, b, c) {
+                if (a == 1) { a = '' };
+                b >= 0 ? b = '+' + b : b;
+                if (b == 1) { b = '+' }
+                if (b == -1) { b = '-' }
+                c >= 0 ? c = '+' + c : c;
+                if (c == 0) { c = '' };
+                return (`${a}x²${b}x${c}=0`);
+            }
+
+            function count_fractional(numerator, denominator, reduce_mod = false) {
+                if (numerator % denominator === 0) {
+                    if (!reduce_mod) {
+                        return (`<span>${numerator / denominator}</span>`)
+                    } else {
+                        return ([numerator / denominator, 1]);
+                    }
+
+                } else {
+                    for (let i = 2; i < 100; i++) {
+                        if ((numerator % i === 0) && (denominator % i === 0)) {
+                            numerator /= i;
+                            denominator /= i;
+                        }
+                    };
+                    if (!reduce_mod) {
+                        return (`<span class="quotient">${numerator}</span><br>${denominator}`);
+                    } else {
+                        return ([numerator, denominator]);
+                    };
+                };
+            };
+
+            function count_root(descriminant, reduce_mod = false) {
+                let beforeroot = 1;
+                for (let i = 0; i < 100; i++) {
+                    for (let j = 2; j < 100; j++) {
+                        if (descriminant % j ** 2 === 0) {
+                            descriminant /= j ** 2;
+                            beforeroot *= j;
+                        };
+                    }
+                };
+                
+                if (!reduce_mod) {
+                    if (beforeroot == 1) { beforeroot = '' };
+                    return (`${beforeroot}&radic;<span class="radical">${descriminant}</span>`);
+                } else {
+                    return ([beforeroot, descriminant])
+                }
+
+            };
+
+            function reduce_fractional(b, D, a) {
+                let [beforeroot, descriminant] = count_root(D, true);
+                let [first_num, first_denum] = count_fractional(b, a, true);
+                let [second_num, second_denum] = count_fractional(beforeroot, a, true);
+                
+                if (second_num == 1){second_num = ''};
+                return ([first_denum !== 1 ? `<span class="quotient">${first_num}</span><br>${first_denum}` : first_num,
+                second_denum !== 1 ? `<span class="quotient">${second_num}&radic;<span class="radical">${descriminant}</span></span><br>${second_denum}` : `${second_num}&radic;<span class="radical">${descriminant}</span>`,
+                ]);
+            }
+
+            function clean_DOM_and_past_value(a, b, c, D, ifroot, x1 = 0, x2 = 0) {
+                document.getElementById('error-field').innerHTML = '';
+                document.getElementById('error-field').style.display = 'none';
+                if (ifroot) {
+                    let value_object = {
+                        'result1': x1.toString().length > 10 ? x1.toFixed(10) + '...' : x1,
+                        'result2': x2.toString().length > 10 ? x2.toFixed(10) + '...' : x2,
+                        'root-descriminant': `&radic;<span class="radical">${D}</span> = ${Math.sqrt(D)}`,
+                        'findx1': `<span class="quotient">${-b} + ${Math.sqrt(D)}</span><br>${2 * ifMinus(a)}`,
+                        'findx2': `<span class="quotient">${-b} - ${Math.sqrt(D)}</span><br>${2 * ifMinus(a)}`,
+                        'count-findx1': count_fractional(-b + Math.sqrt(D), 2 * a),
+                        'count-findx2': count_fractional(-b - Math.sqrt(D), 2 * a),
+                        'count-findx11': '',
+                        'count-findx12': '',
+                        'count-findx21': '',
+                        'count-findx22': '',
+                    };
+                    for (let key in value_object) {
+                        document.getElementById(key).innerHTML = value_object[key];
+                    };
+
+                } else {
+                    let [r1, r2] = reduce_fractional(-b, D, a * 2);
+                    let value_object = {
+                        'result1': x1.toFixed(10) + '...',
+                        'result2': x2.toFixed(10) + '...',
+                        'root-descriminant': `&radic;<span class="radical">${D}</span> = ` + count_root(D),
+                        'findx1': `<span class="quotient">${-b} + ${count_root(D)}</span><br>${2 * a}`,
+                        'findx2': `<span class="quotient">${-b} - ${count_root(D)}</span><br>${2 * a}`,
+                        'count-findx1': r1,
+                        'count-findx11': '+',
+                        'count-findx12': r2,
+                        'count-findx2': r1,
+                        'count-findx21': '-',
+                        'count-findx22': r2,
+                    }
+                    for (let key in value_object) {
+                        document.getElementById(key).innerHTML = value_object[key];
+                    };
+
+                };
+            }
+
+            function display_result() {
+                let D = b ** 2 - (4 * a * c);
+                document.getElementById('begin').innerHTML = make_an_equation(a, b, c);
+                document.getElementById('descriminant').innerHTML = `${ifMinus(b)}² - (4*${ifMinus(a)}*${ifMinus(c)}) = ${D}`;
+
+                if (D >= 0) {
+                    let x1 = (-b + Math.sqrt(D)) / (2 * a);
+                    let x2 = (-b - Math.sqrt(D)) / (2 * a);
+                    if (Math.sqrt(D) === Math.trunc(Math.sqrt(D))) {
+                        clean_DOM_and_past_value(a, b, c, D, true, x1, x2)
+                    } else {
+                        clean_DOM_and_past_value(a, b, c, D, false, x1, x2);
+                    };
+                } else {
+                    document.getElementById('error-field').innerHTML = 'Дескриминант меньше 0';
+                    document.getElementById('error-field').style.display = 'block';
+                };
+            };
+        }
+    </script>
+
+
+    <script>
+        "use strcit";
+
+
+        let can_keyobrad_active
+        function onoffkv(checkbox) {
+            if (checkbox.value == 'no') {
+                checkbox.value = 'yes';
+                can_keyobrad_active = true;
+            } else {
+                checkbox.value = 'no';
+                can_keyobrad_active = false;
+            };
+        }
+
+
+        if (width = window.innerWidth > 600) {
+
+            let current_input = null;
+            document.addEventListener("click", function (e) {
+                if (e.target.className == "key") {
+                    current_input.value += e.target.innerHTML;
+                } else if (e.target.className.split(' ')[e.target.className.split(' ').length - 1] == "backspace") {
+                    current_input.value = current_input.value.slice(0, -1);
+                } else if (e.target.className.split(' ')[e.target.className.split(' ').length - 1] == "clear-button") {
+                    current_input.value = '';
+                } else if (e.target.className.split(' ')[e.target.className.split(' ').length - 1] == "key-ok-button") {
+                    Main_getData();
+                }
+            });
+
+
+            function setOpacity(keyboard) {
+                let op = 0;
+                while (op <= 0.99) {
+                    (function (_op) {
+                        setTimeout(function () { keyboard.style.opacity = _op; }, 60 + op * 300);
+                    })(op);
+                    op += 0.1;
+                }
+            }
+
+            function position_keyboard(elem) {
+                let coords = elem.getBoundingClientRect();
+                let keyboard = document.getElementById('keyboard');
+                keyboard.style.opacity = '0%';
+                keyboard.style.display = 'block';
+                keyboard.style.left = (coords.x - 46) + 'px';
+                keyboard.style.top = (coords.y + 35) + 'px';
+                setOpacity(keyboard);
+            };
+
+
+            document.addEventListener("mouseover", function (e) {
+                if (e.target.className == "number") {
+                    if (can_keyobrad_active) {
+                        current_input = e.target;
+                        position_keyboard(e.target);
+                    }
+                }
+            });
+
+            document.addEventListener("mouseover", function (e) {
+                for (let cls of ["key", "number", "keyboard", "row"]) {
+                    if (e.target.className.split(' ')[0] == cls) { return (0); };
+                };
+                document.getElementById('keyboard').style.display = 'none';
+            });
+        } else {
+            document.getElementsByClassName('checkbox-block')[0].style.display = 'none';
+        };
+    </script>
+
+    <style>
+        body {
+            background-color: #D1D0D1;
+            display: flex;
+            justify-content: center;
+        }
+
+        .content {
+            width: 98%;
+        }
+
+        .row {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            height: 50%;
+        }
+
+        .error-row {
+            text-align: center;
+        }
+
+        button {
+            border: none;
+            outline: none;
+            font-size: 2rem;
+        }
+
+        .equation-block {
+            background-color: #788B81;
+        }
+
+        #equation {
+            margin-top: 50px;
+            margin-bottom: 35px;
+        }
+
+        .findix_sign_and_xpan {
+            font-size: 2rem;
+        }
+
+        .number {
+            background-color: #D1D0D1;
+            border: none;
+            outline: none;
+            font-size: 1.7rem;
+            height: 2rem;
+            width: 3.9rem;
+        }
+
+        .minplus {
+            user-select: none;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+            cursor: pointer;
+            font-size: 1.5rem;
+            background-color: #788B81;
+            border: 1px solid #334F5C;
+            border-radius: 50%;
+        }
+
+        #ok-button {
+            margin: 15px;
+            cursor: pointer;
+            background-color: #334F5C;
+            width: 50%;
+        }
+
+        #ok-button:hover {
+            color: white;
+        }
+
+        #error-field {
+            color: red;
+            font-size: 3rem;
+            display: none;
+        }
+
+        .radical {
+            text-decoration-line: overline;
+        }
+
+        .quotient {
+            text-decoration-line: underline;
+        }
+
+        #decision-logo {
+            text-align: center;
+            padding: 5px;
+            font-size: 1.1rem;
+            border-top: #334F5C solid 2px;
+            border-radius: 10%;
+        }
+
+        .info {
+            font-size: 1.1rem;
+        }
+
+        #decision {
+            margin-bottom: 50px;
+            border: 1px solid#334F5C;
+        }
+
+        #result-table {
+            border: 3px solid #334F5C;
+            background-color: #788B81;
+        }
+
+        #result1,
+        #result2,
+        td {
+            font-size: 1.8rem;
+            text-align: center;
+        }
+
+        hr {
+            border-color: #334F5C;
+        }
+
+        #keyboard {
+            opacity: 0%;
+            position: absolute;
+            display: none;
+            border: #334F5C 2px solid;
+            padding: 5px;
+            border-radius: 10px;
+            background-color: rgba(0, 50, 50, 0.3);
+        }
+
+        #keyboard .key {
+            user-select: none;
+            width: 40px;
+            height: 40px;
+            float: left;
+            cursor: pointer;
+            color: #fff;
+            margin: 3px;
+            margin-left: 6px;
+            text-align: center;
+            line-height: 40px;
+            background: linear-gradient(to top, #334F5C, #547E91);
+            box-shadow:
+                -1px 0px rgb(51, 79, 92), -1px 1px rgb(36, 56, 65),
+                -2px 1px rgb(50, 78, 91), -2px 2px rgb(35, 55, 64),
+                -3px 2px rgb(49, 77, 90), -3px 3px rgb(34, 54, 63),
+                -4px 3px rgb(48, 76, 89), -4px 4px rgb(33, 53, 62),
+                -5px 4px rgb(47, 75, 88), -5px 5px rgb(32, 52, 61),
+                -6px 5px rgb(46, 74, 87), -6px 6px rgb(31, 51, 60);
+        }
+
+        #keyboard .key-ok-button {
+            width: 120px;
+            height: 35px;
+        }
+
+        #keyboard .key:hover {
+            background: #334F5C;
+        }
+
+        #keyboard .key-ok-button:hover {
+            background: #336E5C;
+        }
+
+        #keyboard .backspace:hover,
+        #keyboard .clear-button:hover {
+            background: #655E6D;
+        }
+
+        .checkbox-block {
+            margin: 5px;
+        }
+
+        .custom-checkbox {
+            position: absolute;
+            z-index: -1;
+            opacity: 0;
+        }
+
+        .custom-checkbox+label {
+            display: inline-flex;
+            align-items: center;
+            user-select: none;
+        }
+
+        .custom-checkbox+label::before {
+            content: '';
+            display: inline-block;
+            width: 1em;
+            height: 1em;
+            flex-shrink: 0;
+            flex-grow: 0;
+            border: 1px solid #adb5bd;
+            border-radius: 0.25em;
+            margin-right: 0.5em;
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: 50% 50%;
+        }
+
+        .custom-checkbox:checked+label::before {
+            border-color: #0b76ef;
+            background-color: #0b76ef;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23fff' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26 2.974 7.25 8 2.193z'/%3e%3c/svg%3e");
+        }
+
+        .custom-checkbox:not(:disabled):not(:checked)+label:hover::before {
+            border-color: #b3d7ff;
+        }
+
+        .custom-checkbox:not(:disabled):active+label::before {
+            background-color: #b3d7ff;
+            border-color: #b3d7ff;
+        }
+
+        .custom-checkbox:focus+label::before {
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        .custom-checkbox:focus:not(:checked)+label::before {
+            border-color: #80bdff;
+        }
+
+        .custom-checkbox:disabled+label::before {
+            background-color: #e9ecef;
+        }
+    </style>
+
+</body>
+
+</html>
